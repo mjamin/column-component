@@ -1,0 +1,13 @@
+<ng-container [matColumnDef]="name">
+  <th mat-header-cell *matHeaderCellDef>
+    @if(sort) {
+    <span mat-sort-header
+      ><ng-container *ngTemplateOutlet="headerContent"></ng-container
+    ></span>
+    } @else {
+    <ng-container *ngTemplateOutlet="headerContent"></ng-container>
+    }
+  </th>
+  <td mat-cell *matCellDef="let row">{{row[name]}}</td>
+</ng-container>
+<ng-template #headerContent><ng-content /></ng-template>
