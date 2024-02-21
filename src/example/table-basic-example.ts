@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
-import { MatTableModule } from '@angular/material/table';
+import { AfterViewInit, ChangeDetectorRef, Component, DestroyRef, Directive, Input, QueryList, ViewChildren, inject } from '@angular/core';
+import { MatColumnDef, MatTableModule } from '@angular/material/table';
 import { Column } from './column';
 import { MatSort } from '@angular/material/sort';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { startWith, tap } from 'rxjs';
 
 export interface PeriodicElement {
   name: string;
@@ -23,6 +25,31 @@ const ELEMENT_DATA: PeriodicElement[] = [
   { position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne' },
 ];
 
+@Directive()
+export abstract class TableBase implements AfterViewInit {
+  private _displayedColumns: string[] = [];
+  private _customDisplayedColumns: string[];
+  private _changeDetectorRef = inject(ChangeDetectorRef);
+  private _destroyRef = inject(DestroyRef);
+
+  get displayedColumns(): string[] { return this._customDisplayedColumns ?? this._displayedColumns; }
+  set displayedColumns(value: string[]) { this._customDisplayedColumns = value; }
+
+  @ViewChildren(MatColumnDef) columns: QueryList<MatColumnDef>;
+
+  ngAfterViewInit(): void {
+    this.columns.changes.pipe(
+      takeUntilDestroyed(this._destroyRef),
+      startWith(this.columns),
+      tap((columns: QueryList<MatColumnDef>) => {
+        this._displayedColumns = columns.toArray().map(c => c.name);
+      })
+    ).subscribe();
+
+    this._changeDetectorRef.detectChanges();
+  }
+}
+
 /**
  * @title Basic use of `<table mat-table>`
  */
@@ -33,9 +60,11 @@ const ELEMENT_DATA: PeriodicElement[] = [
   standalone: true,
   imports: [MatTableModule, MatSort, Column],
 })
-export class TableBasicExample {
-  displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
+export class TableBasicExample extends TableBase {
   dataSource = ELEMENT_DATA;
+
+  ngOnInit(): void {
+  }
 }
 
 /**  Copyright 2024 Google LLC. All Rights Reserved.

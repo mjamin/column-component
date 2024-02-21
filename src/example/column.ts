@@ -13,25 +13,32 @@ import {
   MatCellDef,
   MatColumnDef,
   MatHeaderCellDef,
+  MatTable,
   MatTableModule,
 } from '@angular/material/table';
+
+export function matColumnDefFactory(c: Column) {
+  return c.columnDef
+}
 
 @Component({
   selector: 'app-column-def',
   standalone: true,
   templateUrl: './column.html',
   imports: [MatTableModule, MatSortHeader, NgTemplateOutlet],
+  providers: [
+    { provide: MatColumnDef, useFactory: matColumnDefFactory, deps: [Column] }
+  ]
 })
 export class Column implements OnInit, OnDestroy {
   @ViewChild(MatColumnDef, { static: true }) columnDef: MatColumnDef;
   @ViewChild(MatCellDef, { static: true }) cellDef: MatCellDef;
-  @ViewChild(MatHeaderCellDef, { static: true })
-  headerCellDef: MatHeaderCellDef;
+  @ViewChild(MatHeaderCellDef, { static: true }) headerCellDef: MatHeaderCellDef;
 
   @Input() name: string;
   @Input() sort: boolean;
 
-  table: CdkTable<any> = inject(CDK_TABLE);
+  table: MatTable<any> = inject(MatTable);
 
   constructor() {
     if (inject(MatSort, { optional: true })) {
